@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="debug" strict="true">
+    <!--  定义变量，可以被${xxx}引用  -->
+    <Properties>
+        <Property name="baseDir">logs</Property>
+    </Properties>
+
+    <!--  定义 Appenders 用来指定输出位置 -->
+    <Appenders>
+        <!-- 日志滚动 $${date:yyyy-MM}：按月滚动文件夹 按小时、文件序号滚动，每次滚动都使用gz压缩 -->
+        <RollingFile name="RollingFile" fileName="${baseDir}/log.log"
+                     filePattern="${baseDir}/$${date:yyyy-MM}/log-%d{yyyy-MM-dd-HH}-%i.log.gz">
+            <!-- 日志格式 -->
+            <PatternLayout pattern="%d %p %c{1.} [%t] %m%n"/>
+            <Policies>
+                <!-- 时间滚动（按月滚动目录，按小时滚动文件） -->
+                <TimeBasedTriggeringPolicy/>
+                <!-- 文件大小滚动（1小时内超过250M，强制滚动一次） -->
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+            <!-- 每天最多100个文件 -->
+            <DefaultRolloverStrategy max="100">
+                <!-- 删除策略，超过三十天删除，如果总文件小于100G，文件数量小于10个，则不会被删除 -->
+                <Delete basePath="${baseDir}" maxDepth="2">
+                    <IfFileName glob="*/app-*.log.gz">
+                        <IfLastModified age="30d">
+                            <IfAny>
+                                <IfAccumulatedFileSize exceeds="100 GB"/>
+                                <IfAccumulatedFileCount exceeds="10"/>
+                            </IfAny>
+                        </IfLastModified>
+                    </IfFileName>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- 多个logger -->
+        <Logger name="org.apache.logging.log4j.test2" level="debug" additivity="false">
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <!-- 一个ROOT -->
+        <Root level="trace">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+</Configuration>
